@@ -10,4 +10,4 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: admin
       MONGO_INITDB_DATABASE: product-service
     volumes:
-      - ./data/mongodb:/data/product_db
+      - ./data/product_db:/data/db
