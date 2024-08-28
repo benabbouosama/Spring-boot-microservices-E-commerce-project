@@ -40,6 +40,13 @@ public class UserService {
         return users.stream().map(this::convertToDto).collect(Collectors.toList());
     }
 
+    public boolean doesUserExist(String email) {
+        log.info("Checking if user with email: {} exists", email);
+        List<UserDto> users = getAllUsers();
+        return users.stream().anyMatch(user -> user.getEmail().equalsIgnoreCase(email));
+    }
+
+
     public UserDto updateUser(Long id, UserDto userDto) {
         log.info("Updating user with ID: {}", id);
         User user = userRepository.findById(id).orElseThrow(() -> {
@@ -97,4 +104,6 @@ public class UserService {
                 userDto.getCountry()
         );
     }
+
+
 }

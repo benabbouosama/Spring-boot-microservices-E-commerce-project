@@ -26,6 +26,11 @@ public class UserController {
         return ResponseEntity.ok(userService.getUserById(id));
     }
 
+    @GetMapping("/exists")
+    public boolean doesUserExist(@RequestParam String email) {
+        return userService.doesUserExist(email);
+    }
+
     @GetMapping
     public ResponseEntity<List<UserDto>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
