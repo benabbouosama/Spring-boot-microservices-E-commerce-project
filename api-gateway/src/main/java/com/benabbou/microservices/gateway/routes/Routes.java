@@ -1,54 +1,48 @@
 package com.benabbou.microservices.gateway.routes;
 
-
+import com.benabbou.microservices.gateway.filter.AuthenticationFilter;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.gateway.server.mvc.handler.GatewayRouterFunctions;
-import org.springframework.cloud.gateway.server.mvc.handler.HandlerFunctions;
+import org.springframework.cloud.gateway.route.RouteLocator;
+import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.function.RequestPredicates;
-import org.springframework.web.servlet.function.RouterFunction;
-import org.springframework.web.servlet.function.ServerResponse;
 
 @Configuration
 public class Routes {
 
-
     @Value("${product-service.url}")
     private String productServiceUrl;
+
     @Value("${order-service.url}")
     private String orderServiceUrl;
+
     @Value("${inventory-service.url}")
     private String inventoryServiceUrl;
+
     @Value("${user-service.url}")
     private String userServiceUrl;
 
-    @Bean
-    public RouterFunction<ServerResponse> productServiceRoute() {
-        return GatewayRouterFunctions.route("product_service")
-                .route(RequestPredicates.path("/products"), HandlerFunctions.http(productServiceUrl))
-                .build();
+    private final AuthenticationFilter authenticationFilter;
+
+    public Routes(AuthenticationFilter authenticationFilter) {
+        this.authenticationFilter = authenticationFilter;
     }
 
     @Bean
-    public RouterFunction<ServerResponse> orderServiceRoute() {
-        return GatewayRouterFunctions.route("order_service")
-                .route(RequestPredicates.path("/orders"), HandlerFunctions.http(orderServiceUrl))
+    public RouteLocator gatewayRoutes(RouteLocatorBuilder builder) {
+        return builder.routes()
+                .route("product_service", r -> r.path("/products/**")
+                        .filters(f -> f.filter(authenticationFilter))
+                        .uri(productServiceUrl))
+                .route("order_service", r -> r.path("/orders/**")
+                        .filters(f -> f.filter(authenticationFilter))
+                        .uri(orderServiceUrl))
+                .route("inventory_service", r -> r.path("/inventory/**")
+                        .filters(f -> f.filter(authenticationFilter))
+                        .uri(inventoryServiceUrl))
+                .route("user_service", r -> r.path("/auth/**")
+                        .filters(f -> f.filter(authenticationFilter))
+                        .uri(userServiceUrl))
                 .build();
     }
-
-    @Bean
-    public RouterFunction<ServerResponse> inventoryServiceRoute() {
-        return GatewayRouterFunctions.route("inventory_service")
-                .route(RequestPredicates.path("/inventory"), HandlerFunctions.http(inventoryServiceUrl))
-                .build();
-    }
-
-    @Bean
-    public RouterFunction<ServerResponse> userServiceRoute() {
-        return GatewayRouterFunctions.route("user_service")
-                .route(RequestPredicates.path("/users"), HandlerFunctions.http(userServiceUrl))
-                .build();
-    }
-
 }
