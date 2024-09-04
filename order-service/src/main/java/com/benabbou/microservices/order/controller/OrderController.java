@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
-@RequestMapping("/orders")
+@RequestMapping("/ecomapi/orders")
 @RequiredArgsConstructor
 @Slf4j
 public class OrderController {

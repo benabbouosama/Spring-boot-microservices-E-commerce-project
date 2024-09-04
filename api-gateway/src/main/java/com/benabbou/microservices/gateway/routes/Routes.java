@@ -22,6 +22,8 @@ public class Routes {
     @Value("${user-service.url}")
     private String userServiceUrl;
 
+
+
     private final AuthenticationFilter authenticationFilter;
 
     public Routes(AuthenticationFilter authenticationFilter) {
@@ -31,18 +33,29 @@ public class Routes {
     @Bean
     public RouteLocator gatewayRoutes(RouteLocatorBuilder builder) {
         return builder.routes()
-                .route("product_service", r -> r.path("/products/**")
+                // Routes for microservices
+                .route("product_service", r -> r.path("/ecomapi/products/**")
                         .filters(f -> f.filter(authenticationFilter))
                         .uri(productServiceUrl))
-                .route("order_service", r -> r.path("/orders/**")
+                .route("order_service", r -> r.path("/ecomapi/orders/**")
                         .filters(f -> f.filter(authenticationFilter))
                         .uri(orderServiceUrl))
-                .route("inventory_service", r -> r.path("/inventory/**")
+                .route("inventory_service", r -> r.path("/ecomapi/inventory/**")
                         .filters(f -> f.filter(authenticationFilter))
                         .uri(inventoryServiceUrl))
-                .route("user_service", r -> r.path("/auth/**")
+                .route("user_service", r -> r.path("/ecomapi/auth/**")
                         .filters(f -> f.filter(authenticationFilter))
                         .uri(userServiceUrl))
+
+                // Swagger Routes
+                .route("product_service_swagger", r -> r.path("/aggregate/product-service/v3/api-docs")
+                        .uri(productServiceUrl + "/api-docs"))
+                .route("order_service_swagger", r -> r.path("/aggregate/order-service/v3/api-docs")
+                        .uri(orderServiceUrl + "/api-docs"))
+                .route("inventory_service_swagger", r -> r.path("/aggregate/inventory-service/v3/api-docs")
+                        .uri(inventoryServiceUrl + "/api-docs"))
+                .route("user_service_swagger", r -> r.path("/aggregate/user-service/v3/api-docs")
+                        .uri(userServiceUrl + "/api-docs"))
                 .build();
     }
 }
