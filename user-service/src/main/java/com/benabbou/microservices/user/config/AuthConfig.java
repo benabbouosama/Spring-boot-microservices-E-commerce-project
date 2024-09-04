@@ -29,7 +29,7 @@ public class AuthConfig {
                 .authorizeHttpRequests()
                 .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**",
                         "/swagger-resources/**", "/api-docs/**", "/aggregate/**",
-                        "/ecom/auth/register", "/ecom/auth/token", "/ecom/auth/validate")
+                        "/ecomapi/auth/register", "/ecomapi/auth/token", "/ecomapi/auth/validate")
                 .permitAll()
                 .and()
                 .build();
