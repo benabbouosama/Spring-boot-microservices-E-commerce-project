@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -23,6 +24,7 @@ public class AuthenticationFilter implements GatewayFilter {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+        ServerHttpRequest request = null;
         String path = exchange.getRequest().getPath().toString();
         log.debug("Processing request for path: {}", path);
 
@@ -47,6 +49,12 @@ public class AuthenticationFilter implements GatewayFilter {
             try {
                 jwtUtil.validateToken(authHeader);
                 log.debug("Token validation successful for path '{}'", path);
+                request =  exchange.getRequest()
+                        .mutate()
+                        .header("loggedInUserName" , jwtUtil.extractUsername(authHeader))
+                        .build();
+
+
             } catch (Exception e) {
                 log.error("Token validation failed for path '{}': {}", path, e.getMessage(), e);
                 return unauthorizedResponse(exchange, "Unauthorized access");
@@ -55,7 +63,7 @@ public class AuthenticationFilter implements GatewayFilter {
             log.debug("Request to path '{}' is not secured, skipping authorization check", path);
         }
 
-        return chain.filter(exchange)
+        return chain.filter(exchange.mutate().request(request).build())
                 .doOnSuccess(aVoid -> log.debug("Request to path '{}' processed successfully", path))
                 .doOnError(throwable -> log.error("Error processing request to path '{}': {}", path, throwable.getMessage(), throwable));
     }

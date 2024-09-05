@@ -2,12 +2,12 @@ package com.benabbou.microservices.order.service;
 
 import com.benabbou.microservices.order.dto.OrderRequest;
 import com.benabbou.microservices.order.feignclient.InventoryClient;
-import com.benabbou.microservices.order.feignclient.UserClient;
 import com.benabbou.microservices.order.model.Order;
 import com.benabbou.microservices.order.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -19,15 +19,10 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final InventoryClient inventoryClient;
-    private final UserClient userClient;
 
-    public String placeOrder(OrderRequest orderRequest) {
+    public String placeOrder(OrderRequest orderRequest , String username) {
         try {
-            // Check if the user exists
-            boolean userExists = userClient.doesUserExist(orderRequest.userDetails().email());
-            if (!userExists) {
-                throw new RuntimeException("User with email " + orderRequest.userDetails().email() + " does not exist");
-            }
+            log.info("User {} ordered {}", username , orderRequest.skuCode());
 
             // Check if the product is in stock
             boolean isInStock = inventoryClient.isInStock(orderRequest.skuCode(), orderRequest.quantity());
@@ -38,7 +33,7 @@ public class OrderService {
                 order.setPrice(orderRequest.price().multiply(BigDecimal.valueOf(orderRequest.quantity())));
                 order.setSkuCode(orderRequest.skuCode());
                 order.setQuantity(orderRequest.quantity());
-
+                order.setOrderOwner(username);
                 // Save the order to the repository
                 Order savedOrder = orderRepository.save(order);
 
