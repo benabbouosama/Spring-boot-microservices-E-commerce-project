@@ -52,6 +52,7 @@ public class AuthenticationFilter implements GatewayFilter {
                 request =  exchange.getRequest()
                         .mutate()
                         .header("loggedInUserName" , jwtUtil.extractUsername(authHeader))
+                        .header("loggedInEmail" , jwtUtil.extractEmail(authHeader))
                         .build();
 
 

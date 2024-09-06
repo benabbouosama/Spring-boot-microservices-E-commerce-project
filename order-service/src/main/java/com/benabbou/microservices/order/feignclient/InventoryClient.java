@@ -16,7 +16,7 @@ public interface InventoryClient {
     @RequestMapping(method = RequestMethod.GET, value = "/ecomapi/inventory")
     @CircuitBreaker(name = "inventory", fallbackMethod = "fallbackMethod")
     @Retry(name = "inventory")
-    @TimeLimiter(name = "inventory")
+    // @TimeLimiter(name = "inventory")
     boolean isInStock(@RequestParam("skuCode") String skuCode, @RequestParam("quantity") Integer quantity);
 
     Logger logger = LoggerFactory.getLogger(InventoryClient.class);

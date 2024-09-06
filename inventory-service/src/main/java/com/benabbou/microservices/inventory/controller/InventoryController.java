@@ -1,6 +1,7 @@
 package com.benabbou.microservices.inventory.controller;
 
 
+import com.benabbou.microservices.inventory.dto.AddStockRequest;
 import com.benabbou.microservices.inventory.dto.StockCheckResponse;
 import com.benabbou.microservices.inventory.service.InventoryService;
 import lombok.RequiredArgsConstructor;
@@ -17,5 +18,13 @@ public class InventoryController {
     @ResponseStatus(HttpStatus.OK)
     public boolean isInStock(@RequestParam String skuCode, @RequestParam Integer quantity) {
         return inventoryService.checkStockAvailability(skuCode, quantity).isInStock();
+    }
+
+    // Add new stock to the inventory
+    @PostMapping("/add")
+    @ResponseStatus(HttpStatus.CREATED)
+    public String addStock(@RequestBody AddStockRequest addStockRequest) {
+        inventoryService.addStock(addStockRequest);
+        return "Stock added successfully!";
     }
 }

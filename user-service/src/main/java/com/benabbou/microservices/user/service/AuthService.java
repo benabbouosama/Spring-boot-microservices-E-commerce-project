@@ -33,7 +33,7 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
 
-        String token = jwtService.generateToken(user.getUsername());
+        String token = jwtService.generateToken(user.getUsername() , user.getEmail());
         log.info("User registered successfully with username: {}", user.getUsername());
 
         return token;
@@ -60,7 +60,7 @@ public class AuthService {
             throw new IllegalArgumentException("Invalid username or password.");
         }
 
-        String token = jwtService.generateToken(username);
+        String token = jwtService.generateToken(username,user.getEmail());
         log.info("User authenticated successfully with username: {}", username);
 
         return token;

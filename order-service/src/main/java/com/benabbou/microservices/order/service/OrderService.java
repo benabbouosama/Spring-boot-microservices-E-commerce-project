@@ -1,13 +1,14 @@
 package com.benabbou.microservices.order.service;
 
 import com.benabbou.microservices.order.dto.OrderRequest;
+import com.benabbou.microservices.order.event.OrderPlacingEvent;
 import com.benabbou.microservices.order.feignclient.InventoryClient;
 import com.benabbou.microservices.order.model.Order;
 import com.benabbou.microservices.order.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -19,8 +20,9 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final InventoryClient inventoryClient;
+    private final KafkaTemplate<String, OrderPlacingEvent> kafkaTemplate;
 
-    public String placeOrder(OrderRequest orderRequest , String username) {
+    public String placeOrder(OrderRequest orderRequest , String username , String email) {
         try {
             log.info("User {} ordered {}", username , orderRequest.skuCode());
 
@@ -39,6 +41,14 @@ public class OrderService {
 
                 // Log the successful order placement
                 log.info("Order placed successfully with ID: {}", savedOrder.getId());
+
+                // Send the message to Kafka Topic
+                OrderPlacingEvent orderPlacingEvent = new OrderPlacingEvent();
+                orderPlacingEvent.setOrderNumber(order.getOrderNumber());
+                orderPlacingEvent.setEmail(email);
+                log.info("Start - Sending OrderPlacedEvent {} to Kafka topic order-placing", orderPlacingEvent);
+                kafkaTemplate.send("order-placing", orderPlacingEvent);
+                log.info("End - Sending OrderPlacedEvent {} to Kafka topic order-placing", orderPlacingEvent);
 
                 // Return the order number
                 return savedOrder.getOrderNumber();

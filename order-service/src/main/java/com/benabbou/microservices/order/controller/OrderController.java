@@ -20,10 +20,10 @@ public class OrderController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<String> placeOrder(@RequestBody OrderRequest orderRequest, @RequestHeader("loggedInUserName") String username) {
+    public ResponseEntity<String> placeOrder(@RequestBody OrderRequest orderRequest, @RequestHeader("loggedInUserName") String username, @RequestHeader("loggedInEmail") String email) {
         try {
             // Call the service to place the order and get the order Number
-            String orderNumber = orderService.placeOrder(orderRequest , username);
+            String orderNumber = orderService.placeOrder(orderRequest , username,email);
 
             // Log the successful order placement
             log.info("Order placed successfully with Number: {}", orderNumber);
