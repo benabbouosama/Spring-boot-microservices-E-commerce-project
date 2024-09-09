@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -22,9 +23,19 @@ public class OrderService {
     private final InventoryClient inventoryClient;
     private final KafkaTemplate<String, OrderPlacingEvent> kafkaTemplate;
 
-    public String placeOrder(OrderRequest orderRequest , String username , String email) {
+    /**
+     * Places an order if the product is in stock and sends an event to Kafka.
+     * This method is transactional to ensure data consistency.
+     *
+     * @param orderRequest the order request DTO
+     * @param username the username of the person placing the order
+     * @param email the email of the person placing the order
+     * @return the order number if successful
+     */
+    @Transactional
+    public String placeOrder(OrderRequest orderRequest, String username, String email) {
         try {
-            log.info("User {} ordered {}", username , orderRequest.skuCode());
+            log.info("User {} ordered {}", username, orderRequest.skuCode());
 
             // Check if the product is in stock
             boolean isInStock = inventoryClient.isInStock(orderRequest.skuCode(), orderRequest.quantity());
@@ -36,6 +47,7 @@ public class OrderService {
                 order.setSkuCode(orderRequest.skuCode());
                 order.setQuantity(orderRequest.quantity());
                 order.setOrderOwner(username);
+
                 // Save the order to the repository
                 Order savedOrder = orderRepository.save(order);
 
@@ -57,7 +69,7 @@ public class OrderService {
             }
 
         } catch (Exception e) {
-            // Log the exception and rethrow or handle as needed
+            // Log the exception and rollback the transaction if necessary
             log.error("Error placing order: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to place the order due to: " + e.getMessage());
         }

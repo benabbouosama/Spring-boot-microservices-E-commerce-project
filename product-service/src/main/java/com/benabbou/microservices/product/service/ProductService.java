@@ -7,16 +7,24 @@ import com.benabbou.microservices.product.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class ProductService {
+
     private final ProductRepository productRepository;
 
+    /**
+     * Creates a new product and returns a response.
+     *
+     * @param productRequest the product request DTO
+     * @return ProductResponse with the created product details
+     */
+    @Transactional
     public ProductResponse createProduct(ProductRequest productRequest) {
         Product product = mapToEntity(productRequest);
         productRepository.save(product);
@@ -24,6 +32,12 @@ public class ProductService {
         return mapToResponse(product);
     }
 
+    /**
+     * Retrieves all products.
+     *
+     * @return List of ProductResponse
+     */
+    @Transactional(readOnly = true) // Transaction is read-only for performance optimization
     public List<ProductResponse> getAllProducts() {
         return productRepository.findAll()
                 .stream()
@@ -31,6 +45,13 @@ public class ProductService {
                 .toList();
     }
 
+    /**
+     * Retrieves a product by its ID.
+     *
+     * @param id the product ID
+     * @return ProductResponse
+     */
+    @Transactional(readOnly = true) // Read-only transaction since it's a retrieval
     public ProductResponse getProductById(String id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> {
@@ -40,6 +61,12 @@ public class ProductService {
         return mapToResponse(product);
     }
 
+    /**
+     * Deletes a product by its ID.
+     *
+     * @param id the product ID
+     */
+    @Transactional
     public void deleteProductById(String id) {
         if (!productRepository.existsById(id)) {
             log.error("Product with ID: {} not found", id);

@@ -9,6 +9,7 @@ import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.mail.javamail.MimeMessagePreparator;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -23,7 +24,7 @@ public class EmailService {
 
     @KafkaListener(topics = "order-placing")
     public void listen(OrderPlacingEvent orderPlacingEvent) {
-        log.info("Got Message from order-placing topic: {}", orderPlacingEvent);
+        log.info("Received message from order-placing topic: {}", orderPlacingEvent);
 
         // Ensure the event contains an email and order number
         if (orderPlacingEvent.getEmail() == null || orderPlacingEvent.getOrderNumber() == null) {
@@ -31,27 +32,35 @@ public class EmailService {
             return; // Exit if email or order number is missing
         }
 
+        // Asynchronously send the email
+        sendOrderConfirmationEmail(orderPlacingEvent);
+    }
+
+    @Async // Make email sending asynchronous
+    public void sendOrderConfirmationEmail(OrderPlacingEvent orderPlacingEvent) {
         MimeMessagePreparator messagePreparator = mimeMessage -> {
             MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage);
             messageHelper.setFrom(senderEmail);
             messageHelper.setTo(orderPlacingEvent.getEmail());
-            messageHelper.setSubject(String.format("Your Order with Order Number %s is placed successfully", orderPlacingEvent.getOrderNumber()));
+            messageHelper.setSubject(String.format("Order Confirmation - Order No: %s", orderPlacingEvent.getOrderNumber()));
             messageHelper.setText(String.format("""
-                            Hi,
-
-                            Your order with order number %s is now placed successfully.
-
-                            Best Regards,
-                            Your Shop
-                            """, orderPlacingEvent.getOrderNumber()), true);
+                            <html>
+                                <body>
+                                    <p>Dear Customer,</p>
+                                    <p>Your order with order number <strong>%s</strong> has been placed successfully.</p>
+                                    <br>
+                                    <p>Best Regards,</p>
+                                    <p>Your Shop</p>
+                                </body>
+                            </html>
+                            """, orderPlacingEvent.getOrderNumber()), true); // HTML content
         };
 
         try {
             javaMailSender.send(messagePreparator);
-            log.info("Order notification email sent successfully!");
+            log.info("Order confirmation email sent to {}", orderPlacingEvent.getEmail());
         } catch (MailException e) {
-            log.error("Exception occurred when sending mail to {}", orderPlacingEvent.getEmail(), e);
-            throw new RuntimeException("Exception occurred when sending mail to " + orderPlacingEvent.getEmail(), e);
+            log.error("Error sending email to {}: {}", orderPlacingEvent.getEmail(), e.getMessage(), e);
         }
     }
 }

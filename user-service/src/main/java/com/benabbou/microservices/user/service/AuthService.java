@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +23,7 @@ public class AuthService {
      * @param user the user to be registered
      * @return JWT token for the registered user
      */
+    @Transactional
     public String registerUser(User user) {
         log.info("Attempting to register user with username: {}", user.getUsername());
 
@@ -33,7 +35,7 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
 
-        String token = jwtService.generateToken(user.getUsername() , user.getEmail());
+        String token = jwtService.generateToken(user.getUsername(), user.getEmail());
         log.info("User registered successfully with username: {}", user.getUsername());
 
         return token;
@@ -46,6 +48,7 @@ public class AuthService {
      * @param password the password of the user
      * @return JWT token if authentication is successful
      */
+    // No need for a transaction here, but you can still add one if you need to manage rollback or concurrency control
     public String authenticateUser(String username, String password) {
         log.info("Attempting to authenticate user with username: {}", username);
 
@@ -60,7 +63,7 @@ public class AuthService {
             throw new IllegalArgumentException("Invalid username or password.");
         }
 
-        String token = jwtService.generateToken(username,user.getEmail());
+        String token = jwtService.generateToken(username, user.getEmail());
         log.info("User authenticated successfully with username: {}", username);
 
         return token;
