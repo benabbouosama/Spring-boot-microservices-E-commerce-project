@@ -1,7 +1,6 @@
 package com.benabbou.microservices.inventory.controller;
 
 import com.benabbou.microservices.inventory.dto.AddStockRequest;
-import com.benabbou.microservices.inventory.dto.StockCheckResponse;
 import com.benabbou.microservices.inventory.service.InventoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
