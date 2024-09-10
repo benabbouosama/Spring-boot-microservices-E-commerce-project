@@ -3,6 +3,7 @@ package com.benabbou.microservices.inventory.service;
 import com.benabbou.microservices.inventory.dto.AddStockRequest;
 import com.benabbou.microservices.inventory.dto.StockCheckResponse;
 import com.benabbou.microservices.inventory.exception.InventoryCheckException;
+import com.benabbou.microservices.inventory.feignclient.ProductClient;
 import com.benabbou.microservices.inventory.model.Inventory;
 import com.benabbou.microservices.inventory.repository.InventoryRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,12 +17,18 @@ import org.springframework.transaction.annotation.Transactional;
 public class InventoryService {
 
     private final InventoryRepository inventoryRepository;
+    private final ProductClient productClient;
 
-    // Method to check stock availability
+    /**
+     * Checks the stock availability for a given SKU code and quantity.
+     *
+     * @param skuCode the SKU code
+     * @param quantity the requested quantity
+     * @return StockCheckResponse indicating if the product is in stock
+     */
     public StockCheckResponse checkStockAvailability(String skuCode, Integer quantity) {
         log.info("Start -- Checking stock for SKU: {}, Requested quantity: {}", skuCode, quantity);
         try {
-            // Fetch inventory once to avoid redundant queries
             Inventory inventory = inventoryRepository.findBySkuCode(skuCode);
             boolean isInStock = inventory != null && inventory.getQuantity() >= quantity;
             Integer availableQuantity = inventory != null ? inventory.getQuantity() : 0;
@@ -33,30 +40,43 @@ public class InventoryService {
         }
     }
 
-    // Method to add stock to the inventory
+    /**
+     * Adds stock to the inventory after verifying the product exists.
+     *
+     * @param addStockRequest the request containing SKU code and quantity to add
+     */
     @Transactional
     public void addStock(AddStockRequest addStockRequest) {
-        log.info("Adding stock for SKU: {}, Quantity: {}", addStockRequest.getSkuCode(), addStockRequest.getQuantity());
+        String skuCode = addStockRequest.getSkuCode();
+        Integer quantity = addStockRequest.getQuantity();
+
+        // Verify if the product exists
+        if (!productClient.isProductExists(skuCode)) {
+            log.error("Product with SKU: {} does not exist", skuCode);
+            throw new InventoryCheckException("Product does not exist with SKU: " + skuCode);
+        }
+
+        log.info("Adding stock for SKU: {}, Quantity: {}", skuCode, quantity);
 
         try {
-            Inventory existingItem = inventoryRepository.findBySkuCode(addStockRequest.getSkuCode());
+            Inventory existingItem = inventoryRepository.findBySkuCode(skuCode);
 
             if (existingItem != null) {
-                // If the item exists, update its quantity
-                existingItem.setQuantity(existingItem.getQuantity() + addStockRequest.getQuantity());
+                // Update existing item's quantity
+                existingItem.setQuantity(existingItem.getQuantity() + quantity);
             } else {
-                // If it doesn't exist, create a new entry
+                // Create a new inventory entry
                 existingItem = new Inventory();
-                existingItem.setSkuCode(addStockRequest.getSkuCode());
-                existingItem.setQuantity(addStockRequest.getQuantity());
+                existingItem.setSkuCode(skuCode);
+                existingItem.setQuantity(quantity);
             }
 
             // Save the updated or new inventory item
             inventoryRepository.save(existingItem);
-            log.info("Stock added for SKU: {}, New quantity: {}", addStockRequest.getSkuCode(), existingItem.getQuantity());
+            log.info("Stock added for SKU: {}, New quantity: {}", skuCode, existingItem.getQuantity());
 
         } catch (Exception e) {
-            log.error("Error adding stock for SKU: {}, Quantity: {}", addStockRequest.getSkuCode(), addStockRequest.getQuantity(), e);
+            log.error("Error adding stock for SKU: {}, Quantity: {}", skuCode, quantity, e);
             throw new InventoryCheckException("Failed to add stock", e);
         }
     }

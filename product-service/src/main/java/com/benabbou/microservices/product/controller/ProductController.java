@@ -33,6 +33,21 @@ public class ProductController {
         }
     }
 
+    @GetMapping("/sku/{skuCode}")
+    public ResponseEntity<ProductResponse> getProductBySkuCode(@PathVariable String skuCode) {
+        try {
+            ProductResponse productResponse = productService.getProductBySkuCode(skuCode);
+            return ResponseEntity.ok(productResponse);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+    }
+
+    @GetMapping("/exists/sku/{skuCode}")
+    public boolean isProductExists(@PathVariable("skuCode") String skuCode) {
+        return productService.isProductExists(skuCode);
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProductById(@PathVariable String id) {
         try {
@@ -48,5 +63,4 @@ public class ProductController {
     public List<ProductResponse> getAllProducts() {
         return productService.getAllProducts();
     }
-
 }

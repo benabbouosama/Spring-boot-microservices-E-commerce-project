@@ -37,7 +37,7 @@ public class ProductService {
      *
      * @return List of ProductResponse
      */
-    @Transactional(readOnly = true) // Transaction is read-only for performance optimization
+    @Transactional(readOnly = true)
     public List<ProductResponse> getAllProducts() {
         return productRepository.findAll()
                 .stream()
@@ -51,14 +51,41 @@ public class ProductService {
      * @param id the product ID
      * @return ProductResponse
      */
-    @Transactional(readOnly = true) // Read-only transaction since it's a retrieval
+    @Transactional(readOnly = true)
     public ProductResponse getProductById(String id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> {
                     log.error("Product with ID: {} not found", id);
-                    return new RuntimeException("Product not found");
+                    return new RuntimeException("Product not found with ID: " + id);
                 });
         return mapToResponse(product);
+    }
+
+    /**
+     * Retrieves a product by its SKU code.
+     *
+     * @param skuCode the SKU code
+     * @return ProductResponse
+     */
+    @Transactional(readOnly = true)
+    public ProductResponse getProductBySkuCode(String skuCode) {
+        Product product = productRepository.findBySkuCode(skuCode)
+                .orElseThrow(() -> {
+                    log.error("Product with SKU: {} not found", skuCode);
+                    return new RuntimeException("Product not found for SKU: " + skuCode);
+                });
+        return mapToResponse(product);
+    }
+
+    /**
+     * Checks if a product exists by its SKU code.
+     *
+     * @param skuCode the SKU code
+     * @return boolean indicating whether the product exists
+     */
+    @Transactional(readOnly = true)
+    public boolean isProductExists(String skuCode) {
+        return productRepository.findBySkuCode(skuCode).isPresent();
     }
 
     /**
@@ -70,7 +97,7 @@ public class ProductService {
     public void deleteProductById(String id) {
         if (!productRepository.existsById(id)) {
             log.error("Product with ID: {} not found", id);
-            throw new RuntimeException("Product not found");
+            throw new RuntimeException("Product not found with ID: " + id);
         }
         productRepository.deleteById(id);
         log.info("Product with ID: {} deleted successfully", id);
