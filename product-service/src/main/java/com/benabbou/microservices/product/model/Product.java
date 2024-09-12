@@ -9,6 +9,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.math.BigDecimal;
 
+import org.springframework.data.mongodb.core.index.Indexed;
+
 @Document(collection = "product")
 @Data
 @AllArgsConstructor
@@ -19,6 +21,9 @@ public class Product {
     private String id;
     private String name;
     private String description;
+
+    @Indexed(unique = true)
     private String skuCode;
+
     private BigDecimal price;
 }
