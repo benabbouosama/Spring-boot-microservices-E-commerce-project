@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-service
+  labels:
+    app: order-service
+    collect_logs_with_filebeat: "true"
+    decode_log_event_to_json_object: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: order-service
+  template:
+    metadata:
+      labels:
+        app: order-service
+        collect_logs_with_filebeat: "true"
+        decode_log_event_to_json_object: "true"
+    spec:
+      containers:
+        - name: order-service
+          image: benabbouosama/spring-boot-microservices-e-commerce-project:order-service-latest
+          ports:
+            - containerPort: 8081
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "prod"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-service
+  labels:
+    app: order-service
+spec:
+  ports:
+    - port: 8081
+      protocol: TCP
+      targetPort: 8081
+  selector:
+    app: order-service

@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  labels:
+    app: api-gateway
+    collect_logs_with_filebeat: "true"
+    decode_log_event_to_json_object: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+        collect_logs_with_filebeat: "true"
+        decode_log_event_to_json_object: "true"
+    spec:
+      containers:
+        - name: api-gateway
+          image: benabbouosama/spring-boot-microservices-e-commerce-project:api-gateway-latest
+          ports:
+            - containerPort: 8090
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "prod"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway
+  labels:
+    app: api-gateway
+spec:
+  ports:
+    - port: 80
+      targetPort: 8090
+  selector:
+    app: api-gateway

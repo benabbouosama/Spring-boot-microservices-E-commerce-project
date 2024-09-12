@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-service
+  labels:
+    app: user-service
+    collect_logs_with_filebeat: "true"
+    decode_log_event_to_json_object: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: user-service
+  template:
+    metadata:
+      labels:
+        app: user-service
+        collect_logs_with_filebeat: "true"
+        decode_log_event_to_json_object: "true"
+    spec:
+      containers:
+        - name: user-service
+          image: benabbouosama/spring-boot-microservices-e-commerce-project:user-service-latest
+          ports:
+            - containerPort: 8083
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "prod"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-service
+  labels:
+    app: user-service
+spec:
+  ports:
+    - port: 8083
+      protocol: TCP
+      targetPort: 8083
+  selector:
+    app: user-service

@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: logstash-pipeline-config
+data:
+  logstash.conf: |
+    input {
+      beats {
+        port => 5044
+      }
+    }
+
+    filter {
+      mutate {
+        add_tag => [ "logstash_filter_applied" ]
+      }
+    }
+
+    output {
+      elasticsearch {
+        hosts => "http://elasticsearch:9200"
+      }
+    }

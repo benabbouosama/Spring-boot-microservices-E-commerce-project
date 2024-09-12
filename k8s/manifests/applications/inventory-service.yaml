@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inventory-service
+  labels:
+    app: inventory-service
+    collect_logs_with_filebeat: "true"
+    decode_log_event_to_json_object: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: inventory-service
+  template:
+    metadata:
+      labels:
+        app: inventory-service
+        collect_logs_with_filebeat: "true"
+        decode_log_event_to_json_object: "true"
+    spec:
+      containers:
+        - name: inventory-service
+          image: benabbouosama/spring-boot-microservices-e-commerce-project:inventory-service-latest
+          ports:
+            - containerPort: 8082
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "prod"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: inventory-service
+  labels:
+    app: inventory-service
+spec:
+  ports:
+    - port: 8082
+      protocol: TCP
+      targetPort: 8082
+  selector:
+    app: inventory-service

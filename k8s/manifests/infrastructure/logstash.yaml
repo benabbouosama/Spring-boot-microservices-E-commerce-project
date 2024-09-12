@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: logstash
+  labels:
+    app: logstash
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: logstash
+  template:
+    metadata:
+      labels:
+        app: logstash
+    spec:
+      containers:
+        - name: logstash
+          image: docker.elastic.co/logstash/logstash:7.2.0
+          ports:
+            - containerPort: 25826
+            - containerPort: 5044
+          volumeMounts:
+            - name: logstash-pipeline
+              mountPath: /usr/share/logstash/pipeline
+              readOnly: true
+      volumes:
+        - name: logstash-pipeline
+          configMap:
+            name: logstash-pipeline-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: logstash
+  labels:
+    app: logstash
+spec:
+  ports:
+    - name: "logstash-port-25826"
+      port: 25826
+      protocol: TCP
+      targetPort: 25826
+    - name: "logstash-port-5044"
+      port: 5044
+      protocol: TCP
+      targetPort: 5044
+  selector:
+    app: logstash
