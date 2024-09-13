@@ -50,7 +50,7 @@ The architecture of the system illustrates how various microservices interact wi
 ## Security Architecture
 Below is an overview of the Security Architecture, illustrating how the system ensures secure communication and access control across the microservices.
 
-![Security Architecture](assets/Security Architecture.png)
+![Security Architecture](assets/Security.png)
 
 ## Step 1: Configure Email Service
 
